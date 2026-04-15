@@ -1,8 +1,8 @@
 export default async function handler(req, res) {
   const code = req.query.code;
 
-  const client_id = process.env.CLIENT_ID;
-  const client_secret = process.env.CLIENT_SECRET;
+  const client_id = "4aef14cc756048d08ac9859250650346";
+  const client_secret = "92f3b032712b4401b5401b310ffb294c";
   const redirect_uri = "https://spotify-esp32.vercel.app/api/callback";
 
   const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
@@ -22,6 +22,5 @@ export default async function handler(req, res) {
 
   const data = await tokenResponse.json();
 
-  // 👉 TEMP: show tokens so you can copy
   res.status(200).json(data);
 }
