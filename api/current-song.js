@@ -4,12 +4,13 @@ export const config = {
 
 export default async function handler(req, res) {
   try {
-    const refresh_token = "AQBtVpt0Utt7swFjM-xYh0SihXrVsurekN6jR2oFiKbnV5oyNE87XjqLEVrGtvXjup_u6r2sgSJy6AOl8jQQziAVutvLJBzhGa2uM3pAp327w2VCYHsDHu3pZ1qneaxz2iE";
+    const refresh_token =
+      "AQBtVpt0Utt7swFjM-xYh0SihXrVsurekN6jR2oFiKbnV5oyNE87XjqLEVrGtvXjup_u6r2sgSJy6AOl8jQQziAVutvLJBzhGa2uM3pAp327w2VCYHsDHu3pZ1qneaxz2iE";
     const client_id = "4aef14cc756048d08ac9859250650346";
     const client_secret = "92f3b032712b4401b5401b310ffb294c";
 
     const encoded = Buffer.from(
-      client_id + ":" + client_secret
+      `${client_id}:${client_secret}`
     ).toString("base64");
 
     // 🔁 Get new access token
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
 
     // 🎵 Get current song
     const response = await fetch(
-      ""https://api.spotify.com/v1/me/player"",
+      "https://api.spotify.com/v1/me/player",
       {
         headers: {
           Authorization: `Bearer ${access_token}`,
@@ -61,15 +62,21 @@ export default async function handler(req, res) {
 
     if (!text) {
       return res.status(200).json({
-        message: "No song playing",
+        message: "No active device",
       });
     }
 
     const data = JSON.parse(text);
 
-    res.status(200).json(data);
+    if (!data.is_playing) {
+      return res.status(200).json({
+        message: "Paused or nothing playing",
+      });
+    }
+
+    return res.status(200).json(data);
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       error: err.message,
     });
   }
