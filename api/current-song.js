@@ -12,6 +12,7 @@ export default async function handler(req, res) {
       client_id + ":" + client_secret
     ).toString("base64");
 
+    // 🔁 Get new access token
     const tokenResponse = await fetch(
       "https://accounts.spotify.com/api/token",
       {
@@ -27,10 +28,26 @@ export default async function handler(req, res) {
       }
     );
 
-    const tokenData = await tokenResponse.json();
+    const tokenText = await tokenResponse.text();
+
+    if (!tokenText) {
+      return res.status(500).json({
+        error: "Empty response from Spotify (token)",
+      });
+    }
+
+    const tokenData = JSON.parse(tokenText);
+
+    if (!tokenData.access_token) {
+      return res.status(500).json({
+        error: "Failed to refresh token",
+        details: tokenData,
+      });
+    }
 
     const access_token = tokenData.access_token;
 
+    // 🎵 Get current song
     const response = await fetch(
       "https://api.spotify.com/v1/me/player/currently-playing",
       {
@@ -40,7 +57,15 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
+    const text = await response.text();
+
+    if (!text) {
+      return res.status(200).json({
+        message: "No song playing",
+      });
+    }
+
+    const data = JSON.parse(text);
 
     res.status(200).json(data);
   } catch (err) {
