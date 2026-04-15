@@ -1,30 +1,27 @@
 export default async function handler(req, res) {
   const code = req.query.code;
 
-  const client_id = "4aef14cc756048d08ac9859250650346";
-  const client_secret = "92f3b032712b4401b5401b310ffb294c";
+  const client_id = process.env.CLIENT_ID;
+  const client_secret = process.env.CLIENT_SECRET;
   const redirect_uri = "https://spotify-esp32.vercel.app/api/callback";
 
-  const params = new URLSearchParams();
-  params.append("grant_type", "authorization_code");
-  params.append("code", code);
-  params.append("redirect_uri", redirect_uri);
-
-  const response = await fetch("https://accounts.spotify.com/api/token", {
+  const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
       Authorization:
         "Basic " +
         Buffer.from(client_id + ":" + client_secret).toString("base64"),
-      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: params,
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code: code,
+      redirect_uri: redirect_uri,
+    }),
   });
 
-  const data = await response.json();
+  const data = await tokenResponse.json();
 
-  res.send(`
-    <h2>Access Token:</h2>
-    <p>${data.access_token}</p>
-  `);
+  // 👉 TEMP: show tokens so you can copy
+  res.status(200).json(data);
 }
