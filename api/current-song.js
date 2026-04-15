@@ -6,14 +6,18 @@ export default async function handler(req, res) {
   try {
     const refresh_token =
       "AQBtVpt0Utt7swFjM-xYh0SihXrVsurekN6jR2oFiKbnV5oyNE87XjqLEVrGtvXjup_u6r2sgSJy6AOl8jQQziAVutvLJBzhGa2uM3pAp327w2VCYHsDHu3pZ1qneaxz2iE";
-    const client_id = "4aef14cc756048d08ac9859250650346";
-    const client_secret = "92f3b032712b4401b5401b310ffb294c";
+
+    const client_id =
+      "4aef14cc756048d08ac9859250650346";
+
+    const client_secret =
+      "92f3b032712b4401b5401b310ffb294c";
 
     const encoded = Buffer.from(
       `${client_id}:${client_secret}`
     ).toString("base64");
 
-    // 🔁 Get new access token
+    // 🔁 Refresh access token
     const tokenResponse = await fetch(
       "https://accounts.spotify.com/api/token",
       {
@@ -29,19 +33,11 @@ export default async function handler(req, res) {
       }
     );
 
-    const tokenText = await tokenResponse.text();
-
-    if (!tokenText) {
-      return res.status(500).json({
-        error: "Empty response from Spotify (token)",
-      });
-    }
-
-    const tokenData = JSON.parse(tokenText);
+    const tokenData = await tokenResponse.json();
 
     if (!tokenData.access_token) {
       return res.status(500).json({
-        error: "Failed to refresh token",
+        error: "Token failed",
         details: tokenData,
       });
     }
@@ -58,23 +54,20 @@ export default async function handler(req, res) {
       }
     );
 
-    const text = await response.text();
-
-    if (!text) {
+    if (response.status === 204) {
       return res.status(200).json({
-        message: "No active device",
+        message: "Nothing playing",
       });
     }
 
-    const data = JSON.parse(text);
+    const data = await response.json();
 
-    if (!data.is_playing) {
-      return res.status(200).json({
-        message: "Paused or nothing playing",
-      });
-    }
+    return res.status(200).json({
+      song: data.item?.name,
+      artist: data.item?.artists?.[0]?.name,
+      isPlaying: data.is_playing,
+    });
 
-    return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({
       error: err.message,
